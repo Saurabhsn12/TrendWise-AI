@@ -1,3 +1,12 @@
+---
+title: Trendwise AI
+emoji: 📈
+colorFrom: green
+colorTo: blue
+sdk: docker
+pinned: false
+---
+
 # 🚀 TrendWise AI
 
 **Intelligent Stock Market Analysis and Financial Insight Platform**
