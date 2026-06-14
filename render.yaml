@@ -1,0 +1,16 @@
+# render.yaml — Render.com deployment configuration
+services:
+  - type: web
+    name: trendwise-ai
+    runtime: python
+    buildCommand: pip install -r requirements.txt && python -c "import nltk; nltk.download('punkt'); nltk.download('averaged_perceptron_tagger')"
+    startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: AI_PROVIDER
+        value: local
+      - key: PYTHON_VERSION
+        value: 3.11.0

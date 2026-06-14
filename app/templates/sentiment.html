@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block title %}Sentiment Analysis{% if ticker %} — {{ ticker }}{% endif %} | TrendWise AI{% endblock %}
+{% block meta_description %}AI-powered financial news sentiment analysis for stocks{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<style>
+  .sentiment-positive { color: #059669; background-color: #d1fae5; }
+  .sentiment-negative { color: #dc2626; background-color: #fee2e2; }
+  .sentiment-neutral  { color: #d97706; background-color: #fef3c7; }
+
+  .sentiment-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 2px;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .score-display {
+    font-size: 3rem;
+    font-weight: 700;
+    line-height: 1;
+    font-family: 'Consolas', monospace;
+  }
+
+  .article-card {
+    border-left: 3px solid var(--border-color);
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    background: var(--bg-card, #fff);
+    border-top: 1px solid var(--border, #e0e3eb);
+    border-right: 1px solid var(--border, #e0e3eb);
+    border-bottom: 1px solid var(--border, #e0e3eb);
+    border-radius: 0 6px 6px 0;
+    transition: background 0.15s;
+  }
+
+  .article-card:hover {
+    background: var(--bg-tertiary);
+  }
+
+  .article-card.positive { border-left-color: #059669; }
+  .article-card.negative { border-left-color: #dc2626; }
+  .article-card.neutral  { border-left-color: #d97706; }
+
+  .score-bar {
+    height: 6px;
+    border-radius: 0;
+    background: linear-gradient(to right, #dc2626, #d97706 45%, #d97706 55%, #059669);
+    position: relative;
+    margin: 10px 0;
+  }
+
+  .score-bar .marker {
+    position: absolute;
+    top: -5px;
+    width: 16px;
+    height: 16px;
+    background: #059669;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    transform: translateX(-50%);
+  }
+
+  .stat-number {
+    font-size: 1.8rem;
+    font-weight: 700;
+    font-family: 'Consolas', monospace;
+  }
+
+  .article-card a { color: var(--text-body, #333) !important; }
+  .article-card a:hover { color: #059669 !important; text-decoration: underline !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+  {# ── Page Header ───────────────────────────── #}
+  <div class="text-center mb-4 animate-fade-in-down">
+    <h1><i class="bi bi-chat-dots me-2"></i>Sentiment Analysis</h1>
+    <p class="text-muted">AI-powered financial news sentiment using VADER &amp; TextBlob NLP engines</p>
+  </div>
+
+  {# ── Ticker Form ───────────────────────────── #}
+  <div class="row justify-content-center mb-4">
+    <div class="col-md-6">
+      <div class="card p-4 shadow-sm animate-fade-in">
+        <form action="{{ url_for('sentiment.sentiment_dashboard') }}" method="POST" class="d-flex gap-2">
+          <input type="text" name="ticker" class="form-control" placeholder="e.g. RELIANCE.NS, TCS.NS, AAPL"
+                 value="{{ ticker or '' }}" required id="sentimentTicker" autocomplete="off">
+          <button type="submit" class="btn btn-primary px-4">
+            <i class="bi bi-search me-1"></i>Analyze
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  {# ── Error Message ─────────────────────────── #}
+  {% if error %}
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="alert alert-danger text-center">{{ error }}</div>
+    </div>
+  </div>
+  {% endif %}
+
+  {# ── Sentiment Results ─────────────────────── #}
+  {% if sentiment %}
+  {% set overall = sentiment.overall %}
+
+  {# ── Overall Score + Pie Chart Row ──────── #}
+  <div class="row g-4 mb-4 animate-fade-in-up">
+
+    {# Overall Score Card #}
+    <div class="col-md-4">
+      <div class="card p-4 shadow-sm text-center h-100">
+        <h5 class="section-title mb-3">Overall Sentiment</h5>
+
+        <div class="score-display mb-2
+          {% if overall.label == 'Positive' %}sentiment-positive
+          {% elif overall.label == 'Negative' %}sentiment-negative
+          {% else %}sentiment-neutral{% endif %}"
+          style="background:none;">
+          {{ overall.score }}
+        </div>
+
+        <span class="sentiment-badge mb-3
+          {% if overall.label == 'Positive' %}sentiment-positive
+          {% elif overall.label == 'Negative' %}sentiment-negative
+          {% else %}sentiment-neutral{% endif %}">
+          {% if overall.label == 'Positive' %}📈
+          {% elif overall.label == 'Negative' %}📉
+          {% else %}➡️{% endif %}
+          {{ overall.label }}
+        </span>
+
+        {# Score bar visualization #}
+        <div class="score-bar mt-3">
+          <div class="marker" style="left: {{ ((overall.score + 1) / 2 * 100) | round(1) }}%;"></div>
+        </div>
+        <div class="d-flex justify-content-between small text-muted">
+          <span>Bearish</span>
+          <span>Neutral</span>
+          <span>Bullish</span>
+        </div>
+
+        <div class="mt-3">
+          <small class="text-muted">Confidence: <strong>{{ overall.confidence }}%</strong></small>
+        </div>
+      </div>
+    </div>
+
+    {# Pie Chart #}
+    <div class="col-md-4">
+      <div class="card p-4 shadow-sm h-100">
+        <h5 class="section-title mb-3 text-center">Distribution</h5>
+        <div id="sentimentPieChart" style="height: 250px;"></div>
+      </div>
+    </div>
+
+    {# Stats Card #}
+    <div class="col-md-4">
+      <div class="card p-4 shadow-sm h-100">
+        <h5 class="section-title mb-3 text-center">Statistics</h5>
+
+        <div class="d-flex justify-content-around text-center mt-2">
+          <div>
+            <div class="stat-number" style="color:#059669;">{{ overall.positive_count }}</div>
+            <small class="text-muted">Positive</small>
+          </div>
+          <div>
+            <div class="stat-number" style="color:#d97706;">{{ overall.neutral_count }}</div>
+            <small class="text-muted">Neutral</small>
+          </div>
+          <div>
+            <div class="stat-number" style="color:#dc2626;">{{ overall.negative_count }}</div>
+            <small class="text-muted">Negative</small>
+          </div>
+        </div>
+
+        <hr class="my-3">
+
+        <div class="small text-center">
+          <p class="mb-1"><strong>Total Articles:</strong> {{ overall.total_articles }}</p>
+          <p class="mb-1"><strong>Positive:</strong> {{ overall.positive_pct }}%</p>
+          <p class="mb-1"><strong>Neutral:</strong> {{ overall.neutral_pct }}%</p>
+          <p class="mb-0"><strong>Negative:</strong> {{ overall.negative_pct }}%</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# ── News Articles ─────────────────────────── #}
+  <div class="mb-4 animate-fade-in-up">
+    <h4 class="section-title mb-3">
+      <i class="bi bi-newspaper me-2"></i>News Articles for {{ ticker }}
+    </h4>
+
+    {% for article in sentiment.articles %}
+    <div class="article-card {{ article.label | lower }}">
+      <div class="d-flex justify-content-between align-items-start">
+        <div class="flex-grow-1">
+          <a href="{{ article.link }}" target="_blank" class="text-decoration-none" style="color: var(--tw-text);">
+            <strong>{{ article.title }}</strong>
+          </a>
+          <div class="small text-muted mt-1">
+            <i class="bi bi-building me-1"></i>{{ article.publisher }}
+            {% if article.published %}
+              <span class="ms-2"><i class="bi bi-clock me-1"></i>{{ article.published }}</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="text-end ms-3" style="min-width: 120px;">
+          <span class="sentiment-badge
+            {% if article.label == 'Positive' %}sentiment-positive
+            {% elif article.label == 'Negative' %}sentiment-negative
+            {% else %}sentiment-neutral{% endif %}">
+            {{ article.label }}
+          </span>
+          <div class="small text-muted mt-1">Score: {{ article.compound }}</div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {# ── NLP Methods Card ──────────────────────── #}
+  <div class="card p-4 shadow-sm mb-4">
+    <h5 class="section-title"><i class="bi bi-cpu me-2"></i>NLP Methods Used</h5>
+    <div class="row mt-2">
+      <div class="col-md-6">
+        <h6>VADER (Primary)</h6>
+        <p class="small text-muted mb-0">
+          Valence Aware Dictionary and sEntiment Reasoner — a lexicon and rule-based sentiment analysis tool
+          specifically attuned to sentiments expressed in social media and news text.
+        </p>
+      </div>
+      <div class="col-md-6">
+        <h6>TextBlob (Secondary)</h6>
+        <p class="small text-muted mb-0">
+          Pattern-based NLP library providing polarity (positive/negative) and subjectivity (fact vs. opinion)
+          analysis using a pre-trained model.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  {% endif %}
+
+  {# ── Empty State ───────────────────────────── #}
+  {% if not sentiment and not error %}
+  <div class="text-center py-5 animate-fade-in">
+    <i class="bi bi-chat-dots" style="font-size: 4rem; color: var(--tw-accent);"></i>
+    <h4 class="mt-3 section-title">Enter a stock ticker to analyze market sentiment</h4>
+    <p class="text-muted">We'll fetch the latest news and run NLP-powered sentiment analysis</p>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% if sentiment %}
+<script>
+  // Plotly Pie Chart
+  const pieData = [{
+    values: [{{ sentiment.overall.positive_count }}, {{ sentiment.overall.neutral_count }}, {{ sentiment.overall.negative_count }}],
+    labels: ['Positive', 'Neutral', 'Negative'],
+    type: 'pie',
+    marker: {
+      colors: ['#059669', '#d97706', '#dc2626']
+    },
+    textinfo: 'label+percent',
+    hole: 0.4,
+    textfont: { size: 13, color: '#333' },
+  }];
+
+  Plotly.newPlot('sentimentPieChart', pieData, {
+    margin: { t: 10, b: 10, l: 10, r: 10 },
+    showlegend: false,
+    paper_bgcolor: 'rgba(0,0,0,0)',
+    plot_bgcolor: 'rgba(0,0,0,0)',
+  });
+</script>
+{% endif %}
+{% endblock %}

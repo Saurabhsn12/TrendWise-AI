@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}TrendWise AI — Stock Analysis{% endblock %}
+{% block meta_description %}Analyze stocks with TrendWise AI — get real-time insights, charts, and predictions{% endblock %}
+
+{% block content %}
+{# ── Welcome Message ─────────────────────────── #}
+<h1 class="text-center mt-4 fw-bold custom-title display-6">Welcome, {{ username }}</h1>
+
+{# ── Stock Request Form ──────────────────────── #}
+<div class="container" id="form-section">
+  <div class="form-section">
+    <h2 class="mb-4 section-title text-center">Stock Price Request</h2>
+
+    {% if error %}
+      <div class="alert alert-danger mb-3">{{ error }}</div>
+    {% endif %}
+
+    <form action="{{ url_for('analysis.analyze') }}" method="POST" id="analysis-form">
+      <div class="mb-3">
+        <label for="stockName" class="form-label">Stock Symbol</label>
+        <input type="text" class="form-control" id="stockName" name="stockname"
+               placeholder="e.g. RELIANCE.NS, TCS.NS, AAPL, TSLA" required autocomplete="off">
+        <div class="form-text">
+          <i class="bi bi-info-circle me-1"></i>Indian stocks: add <strong>.NS</strong> (NSE) or <strong>.BO</strong> (BSE) — e.g. RELIANCE.NS, TCS.NS
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-6 mb-3">
+          <label for="startDate" class="form-label">Start Date</label>
+          <input type="date" class="form-control" id="startDate" name="startDate" required>
+        </div>
+        <div class="col-6 mb-3">
+          <label for="endDate" class="form-label">End Date</label>
+          <input type="date" class="form-control" id="endDate" name="endDate" required>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary w-100">
+        <i class="bi bi-search me-2"></i>Analyze
+      </button>
+    </form>
+  </div>
+
+  {# ── Insights Placeholder ─────────────────── #}
+  <div class="insight-section mt-4" id="stock-insights">
+    <h4 class="section-title">Insights &amp; Results</h4>
+    <p class="text-muted fst-italic">Submit a request to view the latest stock trends, visualizations, and prediction results right here.</p>
+  </div>
+</div>
+{% endblock %}

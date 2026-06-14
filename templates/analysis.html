@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>TrendWise — Stock Analysis</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f8f1ea;
+      color: #3e2723;
+      padding-top: 90px;
+    }
+
+    .navbar {
+      background-color: #f8f1ea;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 1030;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .navbar-brand {
+      font-weight: bold;
+      color: #3e2723 !important;
+    }
+
+    .nav-link {
+      color: #3e2723 !important;
+      font-weight: 500;
+    }
+
+    h1, h2, h4 {
+      color: #3e2723;
+    }
+
+    select, .stat-box, .info-box {
+      background: #fff8f0;
+      border-radius: 10px;
+    }
+
+    .dropdown select {
+      padding: 8px 16px;
+      font-size: 16px;
+      border: 1px solid #a1887f;
+    }
+
+    .stats {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin: 30px 0;
+      flex-wrap: wrap;
+    }
+
+    .stat-box {
+      padding: 15px 25px;
+      font-weight: bold;
+      color: #4e342e;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .image-container {
+      margin: 30px auto;
+      text-align: center;
+    }
+
+    .plot-img {
+      max-width: 90%;
+      border-radius: 10px;
+      display: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .plot-img:hover {
+      box-shadow: 0 0 20px rgba(93, 64, 55, 0.3);
+    }
+
+    .company-info {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      margin: 40px auto;
+    }
+
+    .info-box {
+      padding: 20px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #3e2723;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      position: relative;
+      height: 80px;
+      overflow: hidden;
+      transition: 0.3s ease;
+    }
+
+    .info-box:hover {
+      height: 140px;
+    }
+
+    .info-box .definition {
+      font-size: 13px;
+      font-weight: normal;
+      color: #6d4c41;
+      margin-top: 10px;
+      opacity: 0;
+      max-height: 0;
+      transition: 0.3s ease;
+    }
+
+    .info-box:hover .definition {
+      opacity: 1;
+      max-height: 100px;
+    }
+
+    footer {
+      background-color: #3e2723;
+      color: #eee;
+      width: 100%;
+      position: static;
+      left: unset;
+      right: unset;
+      margin-left: 0;
+      margin-right: 0;
+    }
+
+    footer a {
+      color: #ddd;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    .floating-affiliate {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      width: 180px;
+      background-color: #3e2723;
+      color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+
+    .floating-affiliate.hovered {
+      width: 250px;
+    }
+
+    .collapsed-box {
+      padding: 10px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .expanded-box {
+      display: none;
+      padding: 10px;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .floating-affiliate.hovered .expanded-box {
+      display: block;
+    }
+
+    .floating-affiliate.hovered .collapsed-box {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg shadow-sm">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="/intro">TrendWise</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link active" href="/mistake">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="#">Insights</a></li>
+        <li class="nav-item"><a class="nav-link" href="#">Blog</a></li>
+      </ul>
+
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+            <i class="bi bi-person-circle fs-4"></i>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="/profile">My Profile</a></li>
+            <li><a class="dropdown-item" href="/settings">Settings</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="/">Logout</a></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Page Content -->
+<div class="container">
+  <h1 class="text-center">Analysis for {{ stockname }} / {{ og_name }}</h1>
+
+  <div class="dropdown my-4 text-center">
+    <label for="viewSelect"><strong>View Mode:</strong></label>
+    <select id="viewSelect" onchange="updateImage()">
+      <option value="close">Close</option>
+      <option value="high">High</option>
+      <option value="low">Low</option>
+      <option value="all">All</option>
+    </select>
+  </div>
+
+  <div class="stats">
+    <div class="stat-box">
+      All-Time Low: ${{ low }}
+      <div>(Based on range)</div>
+    </div>
+    <div class="stat-box">
+      All-Time High: ${{ high }}
+      <div>(Based on range)</div>
+    </div>
+  </div>
+
+  <!-- Images -->
+  <div class="image-container">
+    <img id="close" class="plot-img" src="{{ url_for('static', filename=close_img) }}" alt="Close View">
+    <img id="high" class="plot-img" src="{{ url_for('static', filename=high_img) }}" alt="High View">
+    <img id="low" class="plot-img" src="{{ url_for('static', filename=low_img) }}" alt="Low View">
+    <img id="all" class="plot-img" src="{{ url_for('static', filename=combined_img) }}" alt="All Data View">
+  </div>
+
+  <!-- Company Info -->
+   <div class="company-section">
+    <div class="text-center my-4">
+  <a href="{{ url_for('predict_stock', ticker=stockname) }}" class="btn btn-warning px-4 py-2">
+    <i class="bi bi-graph-up-arrow me-2"></i> Predict Next Day Price
+  </a>
+</div>
+
+  <h2 class="text-center">Company Info:</h2>
+  <div class="company-info justify-content-center">
+    <div class="info-box">
+      Sector: {{ sector }}
+      <div class="definition">The broader category the company operates in, like Technology or Healthcare.</div>
+    </div>
+    <div class="info-box">
+      Industry: {{ industry }}
+      <div class="definition">A more specific area within the sector, such as Semiconductors or Biotech.</div>
+    </div>
+    <div class="info-box">
+      CEO: {{ ceo }}
+      <div class="definition">The Chief Executive Officer of the company who oversees overall operations.</div>
+    </div>
+    <div class="info-box">
+      Headquarters: {{ headquarters }}
+      <div class="definition">The main office location of the company where its executives are based.</div>
+    </div>
+    <div class="info-box">
+      Market Cap: ${{ market_cap }}
+      <div class="definition">The total value of a company’s outstanding shares of stock.</div>
+    </div>
+    <div class="info-box">
+      Forward P/E Ratio: {{ pe_ratio_forward }}
+      <div class="definition">A valuation ratio calculated using forecasted future earnings.</div>
+    </div>
+    <div class="info-box">
+      Trailing P/E Ratio: {{ pe_ratio_trailing }}
+      <div class="definition">A valuation ratio calculated using past 12-month earnings.</div>
+    </div>
+    <div class="info-box">
+      EPS: {{ eps }}
+      <div class="definition">Earnings per Share – net income divided by total shares outstanding.</div>
+    </div>
+    <div class="info-box">
+      Dividend Yield: {{ dividend_yield }}
+      <div class="definition">The dividend expressed as a percentage of the stock price.</div>
+    </div>
+    <div class="info-box">
+      52-Week High: ${{ fifty_two_week_high }}
+      <div class="definition">The highest price the stock has reached in the last 52 weeks.</div>
+    </div>
+    <div class="info-box">
+      52-Week Low: ${{ fifty_two_week_low }}
+      <div class="definition">The lowest price the stock has reached in the last 52 weeks.</div>
+    </div>
+    </div>
+</div>
+<!-- Floating Affiliate -->
+<div class="floating-affiliate" onmouseover="this.classList.add('hovered')" onmouseout="this.classList.remove('hovered')">
+  <div class="collapsed-box">
+    <i class="bi bi-cash-coin me-1"></i> Invest Smart
+  </div>
+  <div class="expanded-box">
+    🚀 Want to invest in {{ og_name }}?<br>
+    <a href="https://partner.upstox.com/referral-code" target="_blank" class="btn btn-success mt-2 btn-sm">Open Demat Account</a>
+  </div>
+</div>
+
+<!-- Footer -->
+<div style="width:100vw;position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw;background:#3e2723;">
+  <footer class="pt-5 pb-4 mt-5" style="color: #eee; width: 100%; position: static; left: unset; right: unset; margin-left: 0; margin-right: 0;">
+    <div class="container">
+      <div class="row text-md-start text-center">
+        <div class="col-md-4 mb-4">
+          <h5 class="text-uppercase fw-bold mb-3">TRENDWISE</h5>
+          <p style="max-width: 350px;">Explore stocks and gain insights on your favourite companies.</p>
+        </div>
+        <div class="col-md-4 mb-4">
+          <h6 class="text-uppercase fw-bold mb-3">QUICK LINKS</h6>
+          <ul class="list-unstyled">
+            <li><a href="#" class="text-white d-block mb-2">Home</a></li>
+            <li><a href="#" class="text-white d-block mb-2">Projects</a></li>
+            <li><a href="#" class="text-white d-block mb-2">Blog</a></li>
+            <li><a href="#" class="text-white d-block">Contact</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4 mb-4">
+          <h6 class="text-uppercase fw-bold mb-3">CONTACT</h6>
+          <p><i class="bi bi-envelope me-2"></i> stevemichael681@gmail.com</p>
+          <p><i class="bi bi-phone me-2"></i> +91 94629 04991</p>
+          <p><i class="bi bi-geo-alt me-2"></i> Rajasthan, India</p>
+        </div>
+      </div>
+    </div>
+    <div class="text-center mt-4 border-top pt-3" style="font-size: 0.9rem;">
+      © 2025 <strong>TrendWise</strong> — All Rights Reserved
+    </div>
+  </footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  function updateImage() {
+    const selected = document.getElementById("viewSelect").value;
+    document.querySelectorAll(".plot-img").forEach(img => img.style.display = "none");
+    document.getElementById(selected).style.display = "inline";
+  }
+  updateImage();
+
+  // Optional: delete images from server
+  window.addEventListener('beforeunload', () => {
+    fetch('/delete-images', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        images: ['{{ close_img }}', '{{ high_img }}', '{{ low_img }}', '{{ combined_img }}']
+      })
+    });
+  });
+</script>
+</body>
+</html>

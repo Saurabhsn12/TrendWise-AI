@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up | TrendWise AI{% endblock %}
+{% block meta_description %}Create your TrendWise AI account to access intelligent stock market analysis{% endblock %}
+
+{% block navbar %}
+{# Simplified navbar for signup page #}
+<nav class="navbar navbar-expand-lg shadow-sm">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold" href="{{ url_for('main.intro') }}">
+      <i class="bi bi-graph-up-arrow me-2"></i>TrendWise AI
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item"><a class="nav-link" href="{{ url_for('main.intro') }}">About</a></li>
+      </ul>
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">More</a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{{ url_for('auth.login') }}">Login</a></li>
+            <li><a class="dropdown-item" href="/api/docs">API Documentation</a></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5 d-flex justify-content-center">
+  <div class="card p-4 shadow animate-fade-in" style="min-width: 300px; max-width: 400px; width: 100%;">
+    <form action="{{ url_for('auth.signup') }}" method="POST" id="signup-form">
+      {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+      {% endif %}
+      <h3 class="text-center mb-4">Sign Up</h3>
+
+      <div class="mb-3">
+        <label for="username" class="form-label"><i class="bi bi-person-circle me-2"></i>Username</label>
+        <input type="text" name="Username" placeholder="Enter your Username" class="form-control" id="username" required minlength="3">
+      </div>
+
+      <div class="mb-3">
+        <label for="signupEmail" class="form-label"><i class="bi bi-envelope-fill me-2"></i>Email address</label>
+        <input type="email" name="Email" placeholder="Enter your Email" class="form-control" id="signupEmail" required>
+        <div class="form-text text-muted">We'll never share your email with anyone else.</div>
+      </div>
+
+      <div class="mb-3">
+        <label for="signupPassword" class="form-label"><i class="bi bi-lock-fill me-2"></i>Password</label>
+        <input type="password" name="Password" placeholder="Enter your Password" class="form-control" id="signupPassword" required minlength="4">
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100">Create Account</button>
+
+      <div class="text-center mt-3">
+        <span>Already have an account?</span>
+        <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary btn-sm ms-2">
+          <i class="bi bi-box-arrow-in-right"></i> Login
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

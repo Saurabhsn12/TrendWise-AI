@@ -1,0 +1,1 @@
+# TrendWise AI — AI Package

@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}TrendWise AI — Analysis: {{ stockname }}{% endblock %}
+{% block meta_description %}Stock analysis for {{ og_name }} ({{ stockname }}){% endblock %}
+
+{% block extra_head %}
+<style>
+  body { padding-top: 90px; }
+  .navbar { position: fixed; top: 0; width: 100%; z-index: 1030; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  {# ── Title ─────────────────────────────────── #}
+  <h1 class="text-center animate-fade-in-down">Analysis for {{ stockname }} / {{ og_name }}</h1>
+
+  {# ── View Mode Selector ────────────────────── #}
+  <div class="dropdown my-4 text-center">
+    <label for="viewSelect"><strong>View Mode:</strong></label>
+    <select id="viewSelect" onchange="updateImage()">
+      <option value="close">Close</option>
+      <option value="high">High</option>
+      <option value="low">Low</option>
+      <option value="all">All</option>
+    </select>
+  </div>
+
+  {# ── Price Stats ───────────────────────────── #}
+  <div class="stats">
+    <div class="stat-box">
+      All-Time Low: ${{ low }}
+      <div>(Based on range)</div>
+    </div>
+    <div class="stat-box">
+      All-Time High: ${{ high }}
+      <div>(Based on range)</div>
+    </div>
+  </div>
+
+  {# ── Charts ────────────────────────────────── #}
+  <div class="image-container text-center" style="margin: 30px auto;">
+    <img id="close" class="plot-img" src="{{ url_for('static', filename=close_img) }}" alt="Close View">
+    <img id="high" class="plot-img" src="{{ url_for('static', filename=high_img) }}" alt="High View">
+    <img id="low" class="plot-img" src="{{ url_for('static', filename=low_img) }}" alt="Low View">
+    <img id="all" class="plot-img" src="{{ url_for('static', filename=combined_img) }}" alt="All Data View">
+  </div>
+
+  {# ── Action Buttons ──────────────────────────── #}
+  <div class="text-center my-4">
+    <a href="{{ url_for('prediction.predict_stock', ticker=stockname) }}" class="btn btn-warning px-4 py-2 me-2">
+      <i class="bi bi-graph-up-arrow me-2"></i>Predict Next Day Price
+    </a>
+    <a href="{{ url_for('sentiment.sentiment_for_ticker', ticker=stockname) }}" class="btn btn-info px-4 py-2 me-2">
+      <i class="bi bi-chat-dots me-2"></i>Sentiment Analysis
+    </a>
+    <a href="{{ url_for('insights.ai_insights') }}" class="btn btn-success px-4 py-2">
+      <i class="bi bi-robot me-2"></i>AI Insights
+    </a>
+  </div>
+
+  {# ── Company Info ──────────────────────────── #}
+  <div class="company-section">
+    <h2 class="text-center">Company Info</h2>
+    <div class="company-info justify-content-center">
+      <div class="info-box">
+        Sector: {{ sector }}
+        <div class="definition">The broader category the company operates in, like Technology or Healthcare.</div>
+      </div>
+      <div class="info-box">
+        Industry: {{ industry }}
+        <div class="definition">A more specific area within the sector, such as Semiconductors or Biotech.</div>
+      </div>
+      <div class="info-box">
+        CEO: {{ ceo }}
+        <div class="definition">The Chief Executive Officer who oversees overall operations.</div>
+      </div>
+      <div class="info-box">
+        Headquarters: {{ headquarters }}
+        <div class="definition">The main office location where executives are based.</div>
+      </div>
+      <div class="info-box">
+        Market Cap: ${{ market_cap }}
+        <div class="definition">The total value of a company's outstanding shares of stock.</div>
+      </div>
+      <div class="info-box">
+        Forward P/E Ratio: {{ pe_ratio_forward }}
+        <div class="definition">A valuation ratio calculated using forecasted future earnings.</div>
+      </div>
+      <div class="info-box">
+        Trailing P/E Ratio: {{ pe_ratio_trailing }}
+        <div class="definition">A valuation ratio calculated using past 12-month earnings.</div>
+      </div>
+      <div class="info-box">
+        EPS: {{ eps }}
+        <div class="definition">Earnings per Share — net income divided by total shares outstanding.</div>
+      </div>
+      <div class="info-box">
+        Dividend Yield: {{ dividend_yield }}
+        <div class="definition">The dividend expressed as a percentage of the stock price.</div>
+      </div>
+      <div class="info-box">
+        52-Week High: ${{ fifty_two_week_high }}
+        <div class="definition">The highest price the stock has reached in the last 52 weeks.</div>
+      </div>
+      <div class="info-box">
+        52-Week Low: ${{ fifty_two_week_low }}
+        <div class="definition">The lowest price the stock has reached in the last 52 weeks.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ── Floating Affiliate Widget ───────────────── #}
+<div class="floating-affiliate" onmouseover="this.classList.add('hovered')" onmouseout="this.classList.remove('hovered')">
+  <div class="collapsed-box">
+    <i class="bi bi-cash-coin me-1"></i> Invest Smart
+  </div>
+  <div class="expanded-box">
+    🚀 Want to invest in {{ og_name }}?<br>
+    <a href="https://partner.upstox.com/referral-code" target="_blank" class="btn btn-success mt-2 btn-sm">Open Demat Account</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function updateImage() {
+    const selected = document.getElementById("viewSelect").value;
+    document.querySelectorAll(".plot-img").forEach(img => img.style.display = "none");
+    document.getElementById(selected).style.display = "inline";
+  }
+  updateImage();
+
+  // Cleanup images on page leave
+  window.addEventListener('beforeunload', () => {
+    fetch('{{ url_for("analysis.delete_images") }}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        images: ['{{ close_img }}', '{{ high_img }}', '{{ low_img }}', '{{ combined_img }}']
+      })
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Prediction — {{ ticker }} | TrendWise AI{% endblock %}
+{% block meta_description %}Next-day stock price prediction for {{ ticker }} using ARIMA model{% endblock %}
+
+{% block content %}
+<div class="container mt-4" style="max-width: 900px;">
+
+  <div class="text-center mb-4 animate-fade-in-down">
+    <h1><i class="bi bi-bar-chart-line me-2"></i>Price Prediction</h1>
+    <p class="text-muted">ARIMA time-series forecasting for <strong>{{ ticker }}</strong></p>
+  </div>
+
+  {% if error %}
+  <div class="alert alert-danger text-center mb-4">
+    <i class="bi bi-exclamation-triangle me-2"></i>{{ error }}
+  </div>
+  {% endif %}
+
+  {% if forecast != 'N/A' %}
+  {# ── Prediction Result Cards ──────────────── #}
+  <div class="row g-4 mb-4 animate-fade-in-up">
+    <div class="col-md-4">
+      <div class="card p-4 shadow-sm text-center h-100">
+        <p class="text-muted small mb-1">Last Close Price</p>
+        <h3 class="fw-bold" style="color: var(--text-dark, #1a1a2e);">${{ last_price }}</h3>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card p-4 text-center h-100" style="
+        background: {% if direction == 'up' %}#f0fdf4{% else %}#fef2f2{% endif %};
+        border: 1px solid {% if direction == 'up' %}#059669{% else %}#dc2626{% endif %};
+      ">
+        <p class="text-muted small mb-1">Predicted Next Day</p>
+        <h2 class="fw-bold" style="color: {% if direction == 'up' %}#059669{% else %}#dc2626{% endif %};">
+          ${{ forecast }}
+        </h2>
+        <span class="fw-bold" style="font-size: 1.1rem; color: {% if direction == 'up' %}#059669{% else %}#dc2626{% endif %};">
+          {% if direction == 'up' %}📈 +{% else %}📉 {% endif %}{{ change_pct }}%
+        </span>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card p-4 shadow-sm text-center h-100">
+        <p class="text-muted small mb-1">Model Used</p>
+        <h4 class="fw-bold" style="color: var(--text-dark, #1a1a2e);">ARIMA</h4>
+        {% if arima_order %}
+        <small class="text-muted">Order: {{ arima_order }}</small>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {# ── Forecast Chart ─────────────────────── #}
+  {% if plot_url %}
+  <div class="card shadow-sm p-3 mb-4 animate-fade-in-up">
+    <img src="data:image/png;base64,{{ plot_url }}" alt="Prediction Plot" class="img-fluid rounded" />
+  </div>
+  {% endif %}
+
+  {# ── Model Info ─────────────────────────── #}
+  <div class="card p-4 shadow-sm mb-4 animate-fade-in-up">
+    <h6 class="fw-bold mb-2"><i class="bi bi-info-circle me-2"></i>About the Prediction</h6>
+    <p class="small text-muted mb-0">
+      This prediction uses the <strong>ARIMA (Auto-Regressive Integrated Moving Average)</strong> model,
+      a widely-used statistical method for time-series forecasting. The model analyzes historical price patterns
+      to estimate the next trading day's closing price. Past performance does not guarantee future results.
+    </p>
+  </div>
+  {% endif %}
+
+  {# ── Back Button ────────────────────────── #}
+  <div class="text-center mb-4">
+    <a href="{{ url_for('main.home') }}" class="btn btn-primary px-4 me-2">
+      <i class="bi bi-arrow-left me-2"></i>Back to Home
+    </a>
+    <a href="{{ url_for('insights.ai_insights') }}" class="btn btn-success px-4">
+      <i class="bi bi-robot me-2"></i>AI Insights
+    </a>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TrendWise — Stock Analysis</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body, html {
+      height: 100%;
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f8f1ea;
+      position: relative;
+      overflow-x: hidden;
+      color: #3e2723;
+    }
+
+    .custom-title {
+      color: #000 !important;
+      animation: fadeInDown 0.6s ease-in-out;
+    }
+
+    @keyframes fadeInDown {
+      0% { opacity: 0; transform: translateY(-10px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeInUp {
+      0% { opacity: 0; transform: translateY(10px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-section {
+      background-color: #f8f1ea;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.05);
+      margin-top: 50px;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+      position: relative;
+      z-index: 1;
+      animation: fadeInUp 0.6s ease-in-out;
+    }
+
+    .section-title {
+      color: #4e342e;
+    }
+
+    .btn-primary {
+      background-color: #6c4f3d;
+      border: none;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .btn-primary:hover {
+      background-color: #5a3f2f;
+    }
+
+    .btn-primary:active {
+      background-color: #4e3526 !important;
+      transform: scale(0.97);
+    }
+
+    .insight-section {
+      text-align: center;
+      border: 2px dashed #d7ccc8;
+      background: #fffaf4;
+      padding: 30px;
+      margin-top: 30px;
+      border-radius: 10px;
+      animation: fadeInUp 0.8s ease-in-out;
+    }
+
+    .insight-section p {
+      color: #6d4c41;
+      font-style: italic;
+    }
+
+    footer {
+      background-color: #3e2723;
+      color: #eee;
+    }
+
+    footer a {
+      color: #ddd;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    h3, h2, h4 {
+      color: #3e2723;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg shadow-sm">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold text-dark" href="/intro">Trendwise</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link active" href="/mistake">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="#">Link</a></li>
+          <li class="nav-item"><a class="nav-link disabled">Disabled</a></li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Dropdown</a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="#">Action</a></li>
+              <li><a class="dropdown-item" href="#">Another action</a></li>
+              <li><a class="dropdown-item" href="#">Something else here</a></li>
+            </ul>
+          </li>
+        </ul>
+
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown">
+              <i class="bi bi-person-circle fs-4"></i>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+              <li><a class="dropdown-item" href="/profile">My Profile</a></li>
+              <li><a class="dropdown-item" href="/settings">Settings</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="/">Logout</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Welcome Message -->
+  <h1 class="text-center mt-4 fw-bold custom-title display-6">Welcome, {{username}}</h1>
+
+  <!-- Stock Request Form -->
+  <div class="container" id="form-section">
+    <div class="form-section">
+      <h2 class="mb-4 section-title text-center">Stock Price Request</h2>
+      <form action="/analysis" method="POST">
+        <div class="mb-3">
+          <label for="stockName" class="form-label">Stock Symbol</label>
+          <input type="text" class="form-control" id="stockName" name="stockname" placeholder="e.g. AAPL, TSLA" required>
+        </div>
+        <div class="row">
+          <div class="col-6 mb-3">
+            <label for="startDate" class="form-label">Start Date</label>
+            <input type="date" class="form-control" id="startDate" name="startDate" required>
+          </div>
+          <div class="col-6 mb-3">
+            <label for="endDate" class="form-label">End Date</label>
+            <input type="date" class="form-control" id="endDate" name="endDate" required>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Analyze</button>
+      </form>
+    </div>
+
+    <!-- Stock Insights Section -->
+    <div class="insight-section mt-4" id="stock-insights">
+      <h4 class="section-title">Insights & Results</h4>
+      <p class="text-muted fst-italic">Submit a request to view the latest stock trends, visualizations, and prediction results right here.</p>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="pt-5 pb-4 mt-5">
+    <div class="container text-md-left">
+      <div class="row text-md-start text-center">
+        <div class="col-md-4 mb-4">
+          <h5 class="text-uppercase fw-bold mb-3">TrendWise</h5>
+          <p style="max-width: 300px;">A place to explore stocks and gain detailed insights on your favourite stock.</p>
+        </div>
+
+        <div class="col-md-4 mb-4">
+          <h6 class="text-uppercase fw-bold mb-3">Quick Links</h6>
+          <ul class="list-unstyled">
+            <li><a href="#" class="text-white text-decoration-none d-block mb-2">Home</a></li>
+            <li><a href="#" class="text-white text-decoration-none d-block mb-2">Projects</a></li>
+            <li><a href="#" class="text-white text-decoration-none d-block mb-2">Blog</a></li>
+            <li><a href="#" class="text-white text-decoration-none d-block">Contact</a></li>
+          </ul>
+        </div>
+
+        <div class="col-md-4 mb-4">
+          <h6 class="text-uppercase fw-bold mb-3">Contact</h6>
+          <p><i class="bi bi-envelope me-2"></i> stevemichael681@gmail.com</p>
+          <p><i class="bi bi-phone me-2"></i> +91 94629 04991</p>
+          <p><i class="bi bi-geo-alt me-2"></i> Rajasthan, India</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center mt-4 border-top pt-3" style="font-size: 0.9rem;">
+      © 2025 <strong>TrendWise</strong> — All Rights Reserved
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

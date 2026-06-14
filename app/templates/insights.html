@@ -1,0 +1,355 @@
+{% extends "base.html" %}
+
+{% block title %}AI Insights{% if ticker %} — {{ ticker }}{% endif %} | TrendWise AI{% endblock %}
+{% block meta_description %}AI-powered stock insights and recommendations{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<style>
+  .recommendation-badge {
+    display: inline-block;
+    padding: 8px 20px;
+    border-radius: 2px;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .rec-strong-buy { background: #059669; color: #fff; }
+  .rec-buy { background: #0d9f6e; color: #fff; }
+  .rec-hold { background: #f59e0b; color: #fff; }
+  .rec-watch { background: #ea580c; color: #fff; }
+  .rec-sell { background: #dc2626; color: #fff; }
+
+  .insight-card {
+    background: var(--bg-card, #fff);
+    border: 1px solid var(--border, #e0e3eb);
+    border-radius: 0 6px 6px 0;
+    padding: 20px;
+    margin-bottom: 12px;
+    border-left: 3px solid #059669;
+  }
+
+  .insight-card h6 {
+    color: var(--text-dark, #1a1a2e);
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+
+  .insight-card p {
+    color: var(--text-secondary);
+    margin-bottom: 0;
+    line-height: 1.6;
+    font-size: 13px;
+  }
+
+  .factor-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border, #e0e3eb);
+  }
+  .factor-row:last-child { border-bottom: none; }
+  .factor-name { flex: 0 0 160px; font-weight: 600; color: var(--text-dark, #1a1a2e); font-size: 13px; }
+  .factor-bar-container { flex: 1; padding: 0 16px; }
+  .factor-bar {
+    height: 8px;
+    border-radius: 0;
+    transition: width 0.5s ease;
+  }
+  .factor-score { flex: 0 0 60px; text-align: right; font-weight: 700; font-family: 'Consolas', monospace; }
+
+  .confidence-ring {
+    width: 140px;
+    height: 140px;
+    position: relative;
+    margin: 0 auto;
+  }
+
+  .provider-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border: 1px solid var(--border, #e0e3eb);
+    color: #2563eb;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'Consolas', monospace;
+  }
+
+  .key-metric {
+    text-align: center;
+    padding: 12px;
+  }
+  .key-metric .value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-dark, #1a1a2e);
+    font-family: 'Consolas', monospace;
+  }
+  .key-metric .label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+  {# ── Page Header ───────────────────────────── #}
+  <div class="text-center mb-4 animate-fade-in-down">
+    <h1><i class="bi bi-robot me-2"></i>AI Insights Engine</h1>
+    <p class="text-muted">Generative AI analysis + Multi-factor recommendation</p>
+  </div>
+
+  {# ── Ticker Form ───────────────────────────── #}
+  <div class="row justify-content-center mb-4">
+    <div class="col-md-6">
+      <div class="card p-4 shadow-sm animate-fade-in">
+        <form action="{{ url_for('insights.ai_insights') }}" method="POST" class="d-flex gap-2">
+          <input type="text" name="ticker" class="form-control" placeholder="e.g. RELIANCE.NS, TCS.NS, AAPL"
+                 value="{{ ticker or '' }}" required id="insightsTicker" autocomplete="off">
+          <button type="submit" class="btn btn-primary px-4">
+            <i class="bi bi-lightning me-1"></i>Analyze
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  {% if error %}
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="alert alert-danger text-center">{{ error }}</div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if recommendation %}
+  {# ── Recommendation + Confidence ────────── #}
+  <div class="row g-4 mb-4 animate-fade-in-up">
+
+    {# Recommendation Card #}
+    <div class="col-md-5">
+      <div class="card p-4 shadow-sm text-center h-100">
+        <h5 class="section-title mb-3">AI Recommendation</h5>
+        <div class="mb-3">
+          <span class="recommendation-badge
+            {% if recommendation.recommendation == 'Strong Buy' %}rec-strong-buy
+            {% elif recommendation.recommendation == 'Buy' %}rec-buy
+            {% elif recommendation.recommendation == 'Hold' %}rec-hold
+            {% elif recommendation.recommendation == 'Watch' %}rec-watch
+            {% else %}rec-sell{% endif %}">
+            {% if recommendation.recommendation == 'Strong Buy' %}🚀
+            {% elif recommendation.recommendation == 'Buy' %}📈
+            {% elif recommendation.recommendation == 'Hold' %}⏸️
+            {% elif recommendation.recommendation == 'Watch' %}👀
+            {% else %}📉{% endif %}
+            {{ recommendation.recommendation }}
+          </span>
+        </div>
+        <p class="text-muted small mb-2">Weighted Score: <strong>{{ recommendation.score }}</strong></p>
+        <div id="confidenceGauge" style="height: 180px;"></div>
+        <p class="text-muted small mt-1">Confidence: <strong>{{ recommendation.confidence }}%</strong></p>
+      </div>
+    </div>
+
+    {# Key Metrics #}
+    <div class="col-md-7">
+      <div class="card p-4 shadow-sm h-100">
+        <h5 class="section-title mb-3">{{ company.long_name }} ({{ ticker }})</h5>
+
+        <div class="row g-2 mb-3">
+          <div class="col-4">
+            <div class="key-metric">
+              <div class="value">${{ company.current_price or 'N/A' }}</div>
+              <div class="label">Current Price</div>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="key-metric">
+              <div class="value">{{ company.pe_ratio_trailing or 'N/A' }}</div>
+              <div class="label">P/E Ratio</div>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="key-metric">
+              <div class="value">${{ company.eps or 'N/A' }}</div>
+              <div class="label">EPS</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-2">
+          <div class="col-4">
+            <div class="key-metric">
+              <div class="value">${{ company.fifty_two_week_high or 'N/A' }}</div>
+              <div class="label">52W High</div>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="key-metric">
+              <div class="value">${{ company.fifty_two_week_low or 'N/A' }}</div>
+              <div class="label">52W Low</div>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="key-metric">
+              <div class="value">{{ company.sector or 'N/A' }}</div>
+              <div class="label">Sector</div>
+            </div>
+          </div>
+        </div>
+
+        <hr>
+        <h6 class="fw-semibold mb-2">Reasoning</h6>
+        <ul class="list-unstyled small text-muted">
+          {% for reason in recommendation.reasoning %}
+          <li class="mb-1">
+            {% if 'Bullish' in reason %}📈
+            {% elif 'Caution' in reason %}⚠️
+            {% elif 'Supporting' in reason %}✅
+            {% else %}📋{% endif %}
+            {{ reason }}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  {# ── Factor Breakdown ──────────────────────── #}
+  <div class="card p-4 shadow-sm mb-4 animate-fade-in-up">
+    <h5 class="section-title mb-3"><i class="bi bi-bar-chart-steps me-2"></i>Factor Breakdown</h5>
+    {% for factor in recommendation.factors %}
+    <div class="factor-row">
+      <div class="factor-name">{{ factor.name }}</div>
+      <div class="factor-bar-container">
+        {% set bar_pct = ((factor.score + 2) / 4 * 100) %}
+        <div style="background: #f0e8e0; border-radius: 5px; height: 10px; position: relative;">
+          <div class="factor-bar" style="
+            width: {{ bar_pct }}%;
+            background: {% if factor.score > 0 %}#2e7d32{% elif factor.score < 0 %}#c62828{% else %}#f57f17{% endif %};
+          "></div>
+        </div>
+      </div>
+      <div class="factor-score" style="color: {% if factor.score > 0 %}#059669{% elif factor.score < 0 %}#dc2626{% else %}#d97706{% endif %};">
+        {{ factor.score }}
+      </div>
+    </div>
+    <div class="small text-muted ps-3 pb-2">{{ factor.reason }}</div>
+    {% endfor %}
+  </div>
+
+  {% endif %}
+
+  {% if insight %}
+  {# ── AI Insight Sections ───────────────────── #}
+  <div class="mb-4 animate-fade-in-up">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h4 class="section-title mb-0"><i class="bi bi-lightbulb me-2"></i>AI Analysis</h4>
+      <span class="provider-badge"><i class="bi bi-cpu me-1"></i>{{ insight.provider }}</span>
+    </div>
+
+    {% if insight.summary %}
+    <div class="insight-card">
+      <h6><i class="bi bi-graph-up me-2"></i>Market Summary</h6>
+      <p>{{ insight.summary }}</p>
+    </div>
+    {% endif %}
+
+    {% if insight.trend %}
+    <div class="insight-card" style="border-left-color: #2563eb;">
+      <h6><i class="bi bi-trending-up me-2"></i>Trend Analysis</h6>
+      <p>{{ insight.trend }}</p>
+    </div>
+    {% endif %}
+
+    {% if insight.technical %}
+    <div class="insight-card" style="border-left-color: #7c3aed;">
+      <h6><i class="bi bi-gear me-2"></i>Technical Analysis</h6>
+      <p>{{ insight.technical }}</p>
+    </div>
+    {% endif %}
+
+    {% if insight.risk %}
+    <div class="insight-card" style="border-left-color: #dc2626;">
+      <h6><i class="bi bi-shield-exclamation me-2"></i>Risk Assessment</h6>
+      <p>{{ insight.risk }}</p>
+    </div>
+    {% endif %}
+
+    {% if insight.opportunity %}
+    <div class="insight-card" style="border-left-color: #059669;">
+      <h6><i class="bi bi-rocket-takeoff me-2"></i>Opportunity Analysis</h6>
+      <p>{{ insight.opportunity }}</p>
+    </div>
+    {% endif %}
+  </div>
+
+  {# ── Download Report Button ────────────────── #}
+  {% if ticker and insight %}
+  <div class="text-center mb-4 animate-fade-in-up">
+    <form action="{{ url_for('reports.generate_report') }}" method="POST" style="display:inline;">
+      <input type="hidden" name="ticker" value="{{ ticker }}">
+      <button type="submit" class="btn btn-primary btn-lg px-5">
+        <i class="bi bi-file-earmark-pdf me-2"></i>Download PDF Report
+      </button>
+    </form>
+  </div>
+  {% endif %}
+
+  {# ── Disclaimer ────────────────────────────── #}
+  <div class="alert alert-secondary small text-center mb-4">
+    <i class="bi bi-info-circle me-1"></i>
+    <strong>Disclaimer:</strong> This analysis is for educational and informational purposes only.
+    It does not constitute financial advice. Always do your own research before making investment decisions.
+  </div>
+  {% endif %}
+
+  {# ── Empty State ───────────────────────────── #}
+  {% if not insight and not error %}
+  <div class="text-center py-5 animate-fade-in">
+    <i class="bi bi-robot" style="font-size: 4rem; color: var(--tw-accent);"></i>
+    <h4 class="mt-3 section-title">Enter a stock ticker for AI-powered analysis</h4>
+    <p class="text-muted">Get insights, recommendations, and risk assessment powered by AI</p>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% if recommendation %}
+<script>
+  // Confidence Gauge
+  Plotly.newPlot('confidenceGauge', [{
+    type: 'indicator',
+    mode: 'gauge+number',
+    value: {{ recommendation.confidence }},
+    number: { font: { color: '#1a1a2e' } },
+    gauge: {
+      axis: { range: [0, 100], tickwidth: 1, tickcolor: '#555', dtick: 25 },
+      bar: { color: '{% if recommendation.confidence > 70 %}#059669{% elif recommendation.confidence > 40 %}#d97706{% else %}#dc2626{% endif %}' },
+      bgcolor: '#f3f4f6',
+      borderwidth: 0,
+      steps: [
+        { range: [0, 40], color: '#fee2e2' },
+        { range: [40, 70], color: '#fef3c7' },
+        { range: [70, 100], color: '#d1fae5' },
+      ],
+    }
+  }], {
+    margin: { t: 30, b: 10, l: 30, r: 30 },
+    paper_bgcolor: 'rgba(0,0,0,0)',
+    font: { color: '#6b7280' },
+    height: 170,
+  });
+</script>
+{% endif %}
+{% endblock %}

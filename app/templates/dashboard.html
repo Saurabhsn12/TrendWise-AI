@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | TrendWise AI{% endblock %}
+{% block meta_description %}Your TrendWise AI dashboard — stock overview and market insights{% endblock %}
+
+{% block extra_head %}
+<style>
+  .feature-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: none;
+    border-radius: 14px;
+  }
+  .feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  }
+  .feature-icon {
+    width: 50px; height: 50px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem;
+    margin-bottom: 12px;
+  }
+  .history-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    transition: background 0.2s;
+  }
+  .history-item:hover { background: #f0fdf4; }
+  .stat-card {
+    text-align: center;
+    padding: 20px;
+  }
+  .stat-card .number {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--tw-accent);
+  }
+  .stat-card .label {
+    font-size: 0.85rem;
+    color: var(--tw-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+  {# ── Welcome ───────────────────────────────── #}
+  <div class="mb-4 animate-fade-in-down">
+    <h2>Welcome back, <span style="color: var(--tw-accent);">{{ username }}</span>! 👋</h2>
+    <p class="text-muted">Your intelligent stock analysis dashboard</p>
+  </div>
+
+  {# ── Stats Row ─────────────────────────────── #}
+  <div class="row g-3 mb-4 animate-fade-in">
+    <div class="col-md-3 col-6">
+      <div class="card shadow-sm stat-card">
+        <div class="number">{{ search_history | length }}</div>
+        <div class="label">Searches</div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="card shadow-sm stat-card">
+        <div class="number">{{ favorites | length }}</div>
+        <div class="label">Favorites</div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="card shadow-sm stat-card">
+        <div class="number">5</div>
+        <div class="label">AI Models</div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="card shadow-sm stat-card">
+        <div class="number">20</div>
+        <div class="label">API Routes</div>
+      </div>
+    </div>
+  </div>
+
+  {# ── Feature Quick Actions ─────────────────── #}
+  <div class="row g-4 mb-4">
+    <div class="col-md-3 col-6">
+      <a href="{{ url_for('main.home') }}" class="text-decoration-none">
+        <div class="card p-4 shadow-sm feature-card h-100 text-center animate-fade-in">
+          <div class="feature-icon mx-auto" style="background: #dbeafe; color: #2563eb;">
+            <i class="bi bi-search"></i>
+          </div>
+          <h6 class="fw-bold mb-1">Analyze Stock</h6>
+          <small class="text-muted">Charts, SMA, EMA</small>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-3 col-6">
+      <a href="{{ url_for('sentiment.sentiment_dashboard') }}" class="text-decoration-none">
+        <div class="card p-4 shadow-sm feature-card h-100 text-center animate-fade-in">
+          <div class="feature-icon mx-auto" style="background: #f3e8ff; color: #7c3aed;">
+            <i class="bi bi-chat-dots"></i>
+          </div>
+          <h6 class="fw-bold mb-1">Sentiment</h6>
+          <small class="text-muted">NLP News Analysis</small>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-3 col-6">
+      <a href="{{ url_for('insights.ai_insights') }}" class="text-decoration-none">
+        <div class="card p-4 shadow-sm feature-card h-100 text-center animate-fade-in">
+          <div class="feature-icon mx-auto" style="background: #d1fae5; color: #059669;">
+            <i class="bi bi-robot"></i>
+          </div>
+          <h6 class="fw-bold mb-1">AI Insights</h6>
+          <small class="text-muted">Buy/Hold/Sell</small>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-3 col-6">
+      <a href="/api/docs" class="text-decoration-none">
+        <div class="card p-4 shadow-sm feature-card h-100 text-center animate-fade-in">
+          <div class="feature-icon mx-auto" style="background: #fef3c7; color: #d97706;">
+            <i class="bi bi-code-slash"></i>
+          </div>
+          <h6 class="fw-bold mb-1">API Docs</h6>
+          <small class="text-muted">REST API</small>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <div class="row g-4 mb-4">
+
+    {# ── Search History ─────────────────────── #}
+    <div class="col-md-7">
+      <div class="card shadow-sm p-4 h-100 animate-fade-in-up">
+        <h5 class="section-title mb-3">
+          <i class="bi bi-clock-history me-2"></i>Recent Searches
+        </h5>
+
+        {% if search_history %}
+          {% for item in search_history %}
+          <div class="history-item">
+            <div>
+              <strong style="color: #059669;">{{ item.ticker }}</strong>
+              {% if item.start_date and item.end_date %}
+              <small class="text-muted ms-2">{{ item.start_date }} → {{ item.end_date }}</small>
+              {% endif %}
+            </div>
+            <div>
+              <small class="text-muted">{{ item.searched_at[:16] if item.searched_at else '' }}</small>
+              <a href="{{ url_for('sentiment.sentiment_for_ticker', ticker=item.ticker) }}"
+                 class="btn btn-sm btn-outline-primary ms-2" title="Analyze">
+                <i class="bi bi-graph-up"></i>
+              </a>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="text-center py-4">
+            <i class="bi bi-inbox" style="font-size: 2.5rem; color: var(--tw-accent);"></i>
+            <p class="text-muted mt-2 mb-0">No searches yet. Start by analyzing a stock!</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {# ── Indian Market Quick Guide ──────────── #}
+    <div class="col-md-5">
+      <div class="card shadow-sm p-4 h-100 animate-fade-in-up">
+        <h5 class="section-title mb-3">
+          <i class="bi bi-flag me-2"></i>Indian Stocks (NSE/BSE)
+        </h5>
+        <p class="small text-muted mb-3">Add <strong>.NS</strong> for NSE or <strong>.BO</strong> for BSE</p>
+
+        <div class="row g-2">
+          {% set popular_stocks = [
+            ('RELIANCE.NS', 'Reliance'),
+            ('TCS.NS', 'TCS'),
+            ('INFY.NS', 'Infosys'),
+            ('HDFCBANK.NS', 'HDFC Bank'),
+            ('ICICIBANK.NS', 'ICICI Bank'),
+            ('TATAMOTORS.NS', 'Tata Motors'),
+            ('SBIN.NS', 'SBI'),
+            ('ITC.NS', 'ITC'),
+          ] %}
+          {% for ticker, name in popular_stocks %}
+          <div class="col-6">
+            <a href="{{ url_for('insights.ai_insights') }}" class="text-decoration-none">
+              <div class="history-item" style="background: #f9fafb; border-radius: 6px;">
+                <div>
+                  <strong style="font-size: 0.85rem; color: #059669;">{{ ticker }}</strong><br>
+                  <small class="text-muted">{{ name }}</small>
+                </div>
+              </div>
+            </a>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  {# ── Platform Features ─────────────────────── #}
+  <div class="card shadow-sm p-4 mb-4 animate-fade-in-up">
+    <h5 class="section-title mb-3"><i class="bi bi-stars me-2"></i>Platform Capabilities</h5>
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="d-flex align-items-start">
+          <i class="bi bi-graph-up-arrow fs-4 me-3" style="color: #2563eb;"></i>
+          <div>
+            <h6 class="fw-bold mb-1">Stock Analysis</h6>
+            <small class="text-muted">SMA, EMA, charts with yFinance data for global markets</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="d-flex align-items-start">
+          <i class="bi bi-cpu fs-4 me-3" style="color: #7c3aed;"></i>
+          <div>
+            <h6 class="fw-bold mb-1">NLP Sentiment</h6>
+            <small class="text-muted">VADER + TextBlob dual-method news sentiment analysis</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="d-flex align-items-start">
+          <i class="bi bi-robot fs-4 me-3" style="color: #059669;"></i>
+          <div>
+            <h6 class="fw-bold mb-1">AI Recommendations</h6>
+            <small class="text-muted">6-factor Buy/Hold/Sell scoring with confidence</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="d-flex align-items-start">
+          <i class="bi bi-bar-chart-line fs-4 me-3" style="color: #d97706;"></i>
+          <div>
+            <h6 class="fw-bold mb-1">ARIMA Prediction</h6>
+            <small class="text-muted">Next-day price prediction with statistical models</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="d-flex align-items-start">
+          <i class="bi bi-file-earmark-pdf fs-4 me-3" style="color: #dc2626;"></i>
+          <div>
+            <h6 class="fw-bold mb-1">PDF Reports</h6>
+            <small class="text-muted">Professional downloadable analysis reports</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="d-flex align-items-start">
+          <i class="bi bi-globe fs-4 me-3" style="color: #059669;"></i>
+          <div>
+            <h6 class="fw-bold mb-1">REST API</h6>
+            <small class="text-muted">Swagger-documented endpoints for integration</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
