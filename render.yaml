@@ -3,8 +3,8 @@ services:
   - type: web
     name: trendwise-ai
     runtime: python
-    buildCommand: pip install -r requirements.txt && python -c "import nltk; nltk.download('punkt'); nltk.download('averaged_perceptron_tagger')"
-    startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    buildCommand: pip install -r requirements.txt && python -c "import nltk; nltk.download('punkt'); nltk.download('punkt_tab'); nltk.download('vader_lexicon')"
+    startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 1 --threads 2 --worker-class gthread --timeout 120
     envVars:
       - key: FLASK_ENV
         value: production
