@@ -21,6 +21,10 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
+    # Trust headers from Hugging Face's reverse proxy
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+
     # ── Configure logging ─────────────────────────────────────
     logging.basicConfig(
         level=logging.INFO,

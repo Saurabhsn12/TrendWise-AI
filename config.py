@@ -29,7 +29,12 @@ class Config:
 
     # Session Security
     SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_SAMESITE = 'Lax'
+    if os.environ.get('SPACE_ID'):
+        # Hugging Face runs in an iframe, requiring SameSite=None and Secure=True
+        SESSION_COOKIE_SAMESITE = 'None'
+        SESSION_COOKIE_SECURE = True
+    else:
+        SESSION_COOKIE_SAMESITE = 'Lax'
 
 
 class DevelopmentConfig(Config):
