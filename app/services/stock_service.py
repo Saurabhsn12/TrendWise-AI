@@ -4,6 +4,13 @@ Handles all stock data fetching and processing via yFinance.
 """
 import yfinance as yf
 import pandas as pd
+import requests
+
+# Create a custom session to bypass Yahoo Finance rate limits
+session = requests.Session()
+session.headers.update({
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+})
 
 
 def fetch_stock_data(ticker, start_date, end_date):
@@ -21,7 +28,7 @@ def fetch_stock_data(ticker, start_date, end_date):
     Raises:
         ValueError: If no data is found for the given ticker/dates
     """
-    df = yf.download(ticker, start=start_date, end=end_date)
+    df = yf.download(ticker, start=start_date, end=end_date, session=session)
 
     if df.empty:
         raise ValueError(
@@ -42,7 +49,7 @@ def get_company_info(ticker):
     Returns:
         Dictionary with company details
     """
-    ticker_obj = yf.Ticker(ticker)
+    ticker_obj = yf.Ticker(ticker, session=session)
     info = ticker_obj.get_info()
 
     # Safely get CEO name

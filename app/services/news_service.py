@@ -6,6 +6,13 @@ No paid API keys required — uses yFinance's built-in news feed.
 import yfinance as yf
 from datetime import datetime
 import logging
+import requests
+
+# Create a custom session to bypass Yahoo Finance rate limits
+session = requests.Session()
+session.headers.update({
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+})
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +29,7 @@ def fetch_stock_news(ticker, max_articles=15):
         List of dicts with title, publisher, link, published keys
     """
     try:
-        ticker_obj = yf.Ticker(ticker)
+        ticker_obj = yf.Ticker(ticker, session=session)
         raw_news = ticker_obj.news
 
         if not raw_news:
