@@ -243,7 +243,9 @@ The auto-suggest feature includes 50+ popular Indian stocks. Just start typing!
 
 ## 📄 License
 
-This project is developed for educational and academic purposes as a Final Year B.Tech project.
+This project is licensed under the [MIT License](LICENSE).
+
+*(Originally developed for educational and academic purposes as a Final Year B.Tech project)*
 
 ---
 
